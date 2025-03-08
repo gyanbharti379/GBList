@@ -10,13 +10,29 @@ class GBList:
 
     def __len__(self):
         return self.n
-
+    
+    def count(self):
+        return self.n
+    
+    def index(self):
+        """Return a dictionary with item values as keys and their indices as values."""
+        index_map = {}
+        for i in range(self.n):  
+            if self.A[i] not in index_map:  # Avoid duplicates
+                index_map[self.A[i]] = i
+        return index_map
+         
     def __str__(self):
+        """User-friendly output."""
         result = ''
         for i in range(self.n):
             if ctypes.cast(id(self.A[i]), ctypes.POINTER(ctypes.c_void_p)).contents.value != 0:  
                 result = result + str(self.A[i]) + ','
         return "[" + result[:-1] + "]"
+    
+    def __repr__(self):
+        """Developer-friendly output (debugging)."""
+        return f"GBList({[self.A[i] for i in range(self.n)]})"
 
     def append(self,item):
         if self.find(item) != "error - ValueError! item not in a list":
@@ -37,11 +53,40 @@ class GBList:
             B[i] = self.A[i]
         self.A = B
 
-    def __getitem__(self,index):
-        if 0<=index<self.n:
-            return self.A[index]
+    def __getitem__(self, index):
+        """Support both indexing and slicing"""
+        if isinstance(index, slice):
+            start = index.start if index.start is not None else 0
+            stop = index.stop if index.stop is not None else self.n
+            step = index.step if index.step is not None else 1
+
+            # Adjust negative indices
+            if start < 0:
+                start += self.n
+            if stop < 0:
+                stop += self.n
+
+            # Handle out-of-bounds slicing
+            start = max(0, min(self.n, start))
+            stop = max(0, min(self.n, stop))
+
+            new_list = GBList()
+            for i in range(start, stop, step):
+                new_list.append(self.A[i])
+            return new_list
+
+        elif isinstance(index, int):
+            # Handle negative indexing
+            if index < 0:
+                index += self.n
+            if 0 <= index < self.n:
+                return self.A[index]
+            else:
+                raise IndexError("Index out of range")
+
         else:
-            return "error - List index out of range"
+            raise TypeError("Index must be an integer or a slice")
+
 
     def __setitem__(self, index, item):
             if 0 <= index < self.n: 
@@ -76,6 +121,7 @@ class GBList:
             raise IndexError("list assignment index out of range")   
 
     def pop(self):
+        """Remove and return item at index (default last) from the GBList."""
         if self.n == 0:
             return "error - pop from empty list"
 
@@ -84,10 +130,12 @@ class GBList:
 
 
     def clear(self):
+        """Clear GBList."""
         self.n = 0
         self.size = 1
 
     def find(self,item):
+        """Return a index of value in the list of GBList."""
         for i in range(self.n):
             if self.A[i] == item:
                 return i
@@ -101,6 +149,7 @@ class GBList:
             return "error - ValueError! item not in a list"
         
     def max_item(self):
+            """Return a max number from all integer in the list of GBList."""
             if self.n == 0:
                 return "error - List is empty"  
 
@@ -114,6 +163,7 @@ class GBList:
                 return max_val
 
     def min_item(self):
+        """Return a min number from all integer in the list of GBList."""
         if self.n == 0:
             return "error - List is empty"  
 
@@ -127,6 +177,7 @@ class GBList:
             return min_val 
 
     def average(self):
+        """Return a average of all integer and float items in the list of GBList."""
         if self.n == 0:
             return "error - List is empty"
 
@@ -144,6 +195,7 @@ class GBList:
         return total / count        
 
     def sum(self):
+        """Return a sum of all integer and float items in the list of GBList."""
         if self.n == 0:
             return "error - List is empty"
 
@@ -156,6 +208,7 @@ class GBList:
         return total
 
     def sort(self):
+        """Return a sorted arrary of GBList."""
         B = []
         
         for i in range(0, self.n):  # Change loop range to 0 to self.n - 2
@@ -174,8 +227,30 @@ class GBList:
         return B
     
     def reverse(self):
-        for i in range(self.n // 2):  
-            self.A[i], self.A[self.n - i - 1] = self.A[self.n - i - 1], self.A[i]
-
+        """Return a reverse of GBList."""
+        self.A = self.A[::-1]
         return self.A
+    
+    def copy(self):
+        """Return a shallow copy of GBList, excluding nested lists."""
+        new_list = GBList()  # Create new instance
+        for i in range(self.n):  
+            if not isinstance(self.A[i], GBList):  # Only copy non-list items
+                new_list.append(self.A[i])
+        return new_list
+    
+    def deepcopy(self):
+        """Return a deep copy of GBList."""
+        new_list = GBList()  # Create new instance
+        for i in range(self.n):  # Copy elements
+            new_list.append(self.A[i])
+        return new_list
+    
+    def extend(self, other_list):
+        """Extend the GBList with the items from another GBList."""
+        for i in range(other_list.n):  
+            self.append(other_list.A[i])    
+        return self 
+    
+
                           
